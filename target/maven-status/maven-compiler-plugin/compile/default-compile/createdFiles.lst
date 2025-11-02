@@ -1,4 +1,2 @@
-annotations\AnnotationClass.class
 servlet\FrontServlet.class
-util\ScanUtils.class
 annotations\UrlMapping.class
