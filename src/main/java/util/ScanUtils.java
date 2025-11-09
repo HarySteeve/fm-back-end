@@ -17,6 +17,22 @@ public class ScanUtils {
         return instance;
     }
 
+    public Map<String, RouteInfo> scanUrlMappings(String basePackage) {
+        Map<String, RouteInfo> routes = new HashMap<>();
+        Set<Class<?>> clazz = getClassesInPackage(basePackage);
+
+        for (Class<?> c : clazz) {
+            for (Method m : c.getDeclaredMethods()) {
+                if(m.isAnnotationPresent(UrlMapping.class)) {
+                    UrlMapping ann = m.getAnnotation(UrlMapping.class);
+                    String url = ann.value();
+                    routes.put(url, new RouteInfo(c, m));
+                }
+            }   
+        }
+        return routes;
+    }
+
     /*
      * Gets all the "UrlMapping.path()" values
      * from the methods of clazz
@@ -60,6 +76,8 @@ public class ScanUtils {
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             String path = basePackage.replace(".", "/");
             URL resource = classLoader.getResource(path);
+            System.out.println("Scanning path = " + path);
+            System.out.println("Resource = " + resource);
             if (resource != null) {
                 File directory = new File(resource.getFile());
                 if (directory.exists()) {
