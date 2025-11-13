@@ -1,6 +1,7 @@
-package util;
+package util.scan;
 
 import annotations.UrlMapping;
+import util.http.ClassMethod;
 
 import java.io.File;
 import java.lang.reflect.Method;
@@ -8,53 +9,14 @@ import java.util.*;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 
-public class ScanUtils {
-    private static ScanUtils instance;
+public class ClassScanner {
+    private static ClassScanner instance;
 
-    public static ScanUtils getInstance() {
+    public static ClassScanner getInstance() {
         if (instance == null)
-            instance = new ScanUtils();
+            instance = new ClassScanner();
         return instance;
     }
-
-    public Map<String, RouteInfo> scanUrlMappings(String basePackage) {
-        Map<String, RouteInfo> routes = new HashMap<>();
-        Set<Class<?>> clazz = getClassesInPackage(basePackage);
-
-        for (Class<?> c : clazz) {
-            for (Method m : c.getDeclaredMethods()) {
-                if(m.isAnnotationPresent(UrlMapping.class)) {
-                    UrlMapping ann = m.getAnnotation(UrlMapping.class);
-                    String url = ann.value();
-                    routes.put(url, new RouteInfo(c, m));
-                }
-            }   
-        }
-        return routes;
-    }
-
-    /*
-     * Gets all the "UrlMapping.path()" values
-     * from the methods of clazz
-     */
-    public Map<String, Method> getAllUrlMappingPathValues(Class<?> clazz) throws SecurityException {
-        try {
-            Map<String, Method> result = new HashMap<>();
-
-            Method[] methods = clazz.getDeclaredMethods();
-            for (Method method : methods) {
-                if (method.isAnnotationPresent(UrlMapping.class)) {
-                    UrlMapping annotation = method.getAnnotation(UrlMapping.class);
-                    result.put(annotation.value(), method);
-                }
-            }
-
-            return result;
-        } catch (SecurityException se) {
-            throw se;
-        }   
-    }
-
     
     public Set<Class<?>> getClassesAnnotatedWith(Class<? extends Annotation> annotation, String basePackage) {
         Set<Class<?>> classes = getClassesInPackage(basePackage);
