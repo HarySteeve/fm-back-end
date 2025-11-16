@@ -1,10 +1,6 @@
 package util.scan;
 
-import annotations.UrlMapping;
-import util.http.ClassMethod;
-
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.lang.annotation.Annotation;
 import java.net.URL;
