@@ -1,6 +1,7 @@
 servlet\FrontServlet.class
 servlet\GorgonServletContext.class
 util\scan\MethodScanner.class
+util\http\ModelAndView.class
 util\scan\ClassScanner.class
 annotations\AnnotationClass.class
 util\http\ClassMethod.class

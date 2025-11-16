@@ -51,7 +51,7 @@ public class FrontServlet extends HttpServlet {
         String path = req.getRequestURI().substring(req.getContextPath().length());
 
         ClassMethod c = classMethod.get(path);
-        ResponseHandler.getInstance().handleResponse(c, res);
+        new ResponseHandler(getServletContext()).handleResponse(c, req, res);
     }
 
     private void defaultServe(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {

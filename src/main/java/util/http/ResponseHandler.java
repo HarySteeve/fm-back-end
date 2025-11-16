@@ -5,26 +5,27 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class ResponseHandler {
-    private static ResponseHandler instance;
     private String responseBody;
+    private final ServletContext context;
 
-    public static ResponseHandler getInstance() {
-        if(instance == null) {
-            instance = new ResponseHandler();
-        }
-        return instance;
+    public ResponseHandler(ServletContext context) {
+        this.context = context;
     }
 
     // Fabrication jerijereo
-    public void handleResponse(ClassMethod cm, HttpServletResponse res) throws IOException {
+    public void handleResponse(ClassMethod cm, HttpServletRequest req,HttpServletResponse res) throws IOException {
         Boolean cmExist = cm != null;
         System.out.println(cmExist);
 
         if(cmExist) {
-            invokeControllerMethod(cm, res);
+            invokeControllerMethod(cm, req, res);
         } else {
             handle404(res);
         }
@@ -40,7 +41,7 @@ public class ResponseHandler {
         }
     }
 
-    private void invokeControllerMethod(ClassMethod cm, HttpServletResponse res) {
+    private void invokeControllerMethod(ClassMethod cm, HttpServletRequest req, HttpServletResponse res) {
         try {
             Class<?> c = cm.clazz;
             Method m = cm.method;
@@ -51,12 +52,19 @@ public class ResponseHandler {
             if(returnType.equals(String.class)) {
                 res.setContentType("text/plain");
                 responseBody = m.invoke(objectController).toString();
+            } else if(returnType.equals(ModelAndView.class)){
+                ModelAndView mv = (ModelAndView)m.invoke(objectController);
+                String view = mv.getView();
+                RequestDispatcher requestDispatcher = context.getRequestDispatcher(view);
+                requestDispatcher.forward(req, res);
             } else {
                 m.invoke(objectController);
             }
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalArgumentException | InvocationTargetException | IllegalAccessException ex) {
             // TODO: handle exception
             handleError(res, "Error invoking controller method: "+ ex.getMessage());
+        } catch (ServletException | IOException ex) { // From requestDispatcher.forward()
+            handleError(res, "Error forwarding to view: " + ex.getMessage());
         }
     }
 
