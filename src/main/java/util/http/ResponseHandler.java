@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Map;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -54,6 +55,12 @@ public class ResponseHandler {
                 responseBody = m.invoke(objectController).toString();
             } else if(returnType.equals(ModelAndView.class)){
                 ModelAndView mv = (ModelAndView)m.invoke(objectController);
+                Map<String, Object> data = mv.getData();
+                if(data != null) {
+                    for (Map.Entry<String, Object> entry : data.entrySet()) {
+                        req.setAttribute(entry.getKey(), entry.getValue());
+                    }
+                }
                 String view = mv.getView();
                 RequestDispatcher requestDispatcher = context.getRequestDispatcher(view);
                 requestDispatcher.forward(req, res);
