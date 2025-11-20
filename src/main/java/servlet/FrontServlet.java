@@ -48,13 +48,41 @@ public class FrontServlet extends HttpServlet {
     }
 
     private void customServe(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        String path = req.getRequestURI().substring(req.getContextPath().length());
+        String pathUrl = req.getRequestURI().substring(req.getContextPath().length());
 
-        ClassMethod c = classMethod.get(path);
-        new ResponseHandler(getServletContext()).handleResponse(c, req, res);
+        ClassMethod c = classMethod.get(pathUrl);
+        if(c != null) {
+            new ResponseHandler(getServletContext()).handleResponse(c, req, res);
+        } else {
+            verifyingUrl(pathUrl, req, res);
+        }
     }
 
     private void defaultServe(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         defaultDispatcher.forward(req, res);
+    }
+
+    // Fonction qui verifie s'il existe un accolade dans les url d'une classe
+    private void verifyingUrl(String pathUrl, HttpServletRequest req, HttpServletResponse res) throws IOException {
+        for (Map.Entry<String, ClassMethod> entry : classMethod.entrySet()) {
+            String pathInController = entry.getKey();
+            if(pathInController.contains("{")) {
+                // On construit un regex
+                String regex = pathInController
+                    .replace("{", "(?<")
+                    .replace("}", ">[^/]+)")   // capture group
+                    .replace("/", "\\/");
+
+                regex = "^" + regex + "$";
+                System.out.println(regex);
+
+                if(pathUrl.matches(regex)) {
+                    ClassMethod cm = classMethod.get(pathInController);
+                    new ResponseHandler(getServletContext()).handleResponse(cm, req, res);
+                    return;
+                }
+            }
+        }
+        new ResponseHandler(getServletContext()).handleResponse(null, req, res);
     }
 }
