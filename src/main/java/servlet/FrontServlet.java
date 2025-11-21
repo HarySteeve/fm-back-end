@@ -1,5 +1,6 @@
 package servlet;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -38,7 +39,8 @@ public class FrontServlet extends HttpServlet {
          */
         String path = req.getRequestURI().substring(req.getContextPath().length());
 
-        Boolean resourceExists = getServletContext().getAttribute(path) != null;
+        String realPath = getServletContext().getRealPath(path);
+        boolean resourceExists = realPath != null && new File(realPath).exists();
 
         if (resourceExists) {
             defaultServe(req, res);
