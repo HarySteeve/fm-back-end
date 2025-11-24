@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.apache.commons.beanutils.ConvertUtils;
 
+import annotations.Param;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -58,7 +59,7 @@ public class ResponseHandler {
             if(returnType.equals(String.class)) {
                 res.setContentType("text/plain");
                 responseBody = m.invoke(objectController, args).toString();
-            } else if(returnType.equals(ModelAndView.class)){
+            } else if(returnType.equals(ModelAndView.class)) {
                 ModelAndView mv = (ModelAndView)m.invoke(objectController, args);
                 Map<String, Object> data = mv.getData();
                 if(data != null) {
@@ -80,7 +81,7 @@ public class ResponseHandler {
         }
     }
 
-private Object[] getMatchedParams(Method method, HttpServletRequest req) {
+    private Object[] getMatchedParams(Method method, HttpServletRequest req) {
         Parameter[] parameters = method.getParameters();
         Object[] args = new Object[parameters.length];
 
@@ -90,7 +91,14 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
         );
         for (int i = 0; i < parameters.length; i++) {
             Parameter p = parameters[i];
-            String paramName = p.getName();
+
+            String paramName;
+            Param annotation = p.getAnnotation(Param.class);
+            if(annotation != null) {
+                paramName = annotation.value();
+            } else {
+                paramName = p.getName();
+            }
             System.out.println("PARAMNAME---- "+paramName);
 
             if(paramsViaVue.containsKey(paramName)) {

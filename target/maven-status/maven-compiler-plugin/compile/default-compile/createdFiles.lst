@@ -4,6 +4,7 @@ util\scan\MethodScanner.class
 util\http\ModelAndView.class
 util\scan\ClassScanner.class
 annotations\AnnotationClass.class
+annotations\Param.class
 util\http\ClassMethod.class
 util\http\ResponseHandler.class
 annotations\UrlMapping.class
