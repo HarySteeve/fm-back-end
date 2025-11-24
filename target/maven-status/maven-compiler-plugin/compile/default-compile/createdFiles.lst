@@ -4,6 +4,11 @@ util\scan\MethodScanner.class
 util\http\ModelAndView.class
 util\scan\ClassScanner.class
 annotations\AnnotationClass.class
+<<<<<<< Updated upstream
+=======
+annotations\Param.class
+annotations\PathVariable.class
+>>>>>>> Stashed changes
 util\http\ClassMethod.class
 util\http\ResponseHandler.class
 annotations\UrlMapping.class

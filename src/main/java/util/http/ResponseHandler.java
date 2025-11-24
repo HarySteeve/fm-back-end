@@ -10,6 +10,11 @@ import java.util.Map;
 
 import org.apache.commons.beanutils.ConvertUtils;
 
+<<<<<<< Updated upstream
+=======
+import annotations.Param;
+import annotations.PathVariable;
+>>>>>>> Stashed changes
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -88,9 +93,45 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
         paramsViaVue.forEach((key, value) ->
             System.out.println(key + " => " + Arrays.toString(value))
         );
+
+        Map<String, String> pathVariables = Map.of();
+        String pathTemplate = (String) req.getAttribute("matchedRoute");
+        if(pathTemplate != null) {
+            String actualPath = req.getRequestURI().substring(req.getContextPath().length());
+            pathVariables = extractPathVariables(pathTemplate, actualPath);
+            pathVariables.forEach((key, value) ->
+                System.out.println("PATH VARIABLE: " + key + " => " + value)
+            );
+        }
+        
         for (int i = 0; i < parameters.length; i++) {
             Parameter p = parameters[i];
+<<<<<<< Updated upstream
             String paramName = p.getName();
+=======
+            // @pathVarialble
+            PathVariable pathVariable = p.getAnnotation(PathVariable.class);
+            if(pathVariable != null) {
+                String varName = pathVariable.value().isEmpty() ? p.getName() : pathVariable.value();
+                if(pathVariables.containsKey(varName)) {
+                    String value = pathVariables.get(varName);
+                    Class<?> typeArg = p.getType();
+                    Object convertedValue = ConvertUtils.convert(value, typeArg);
+                    args[i] = convertedValue;
+                } else {
+                    args[i] = null;
+                }
+                continue;
+            }
+            // @param
+            String paramName;
+            Param annotation = p.getAnnotation(Param.class);
+            if(annotation != null) {
+                paramName = annotation.value();
+            } else {
+                paramName = p.getName();
+            }
+>>>>>>> Stashed changes
             System.out.println("PARAMNAME---- "+paramName);
 
             if(paramsViaVue.containsKey(paramName)) {
@@ -104,6 +145,27 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
             }
         }
         return args;
+    }
+
+    private Map<String, String> extractPathVariables(String template, String path) {
+        String[] tSeg = template.split("/");
+        String[] pSeg = path.split("/");
+
+        if(tSeg.length != pSeg.length) return Map.of();
+
+        java.util.Map<String, String> map = new java.util.HashMap<>();
+        for (int i = 0; i < tSeg.length; i++) {
+            String ts = tSeg[i];
+            String ps = pSeg[i];
+            if(ts.startsWith("{") && ts.endsWith("}")) {
+                String name = ts.substring(1, ts.length()-1);
+                map.put(name, ps);
+            } else if(!ts.equals(ps)) {
+                // mismatch, return empty
+                return Map.of();
+            }
+        }
+        return map;
     }
 
     private void handleError(HttpServletResponse res, String error) {
