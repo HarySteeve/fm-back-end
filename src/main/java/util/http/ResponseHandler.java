@@ -14,6 +14,9 @@ import org.apache.commons.beanutils.ConvertUtils;
 =======
 import annotations.Param;
 import annotations.PathVariable;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -107,8 +110,11 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
         for (int i = 0; i < parameters.length; i++) {
             Parameter p = parameters[i];
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             String paramName = p.getName();
 =======
+=======
+>>>>>>> Stashed changes
             // @pathVarialble
             PathVariable pathVariable = p.getAnnotation(PathVariable.class);
             if(pathVariable != null) {
