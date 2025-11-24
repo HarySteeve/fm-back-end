@@ -80,6 +80,7 @@ public class FrontServlet extends HttpServlet {
 
                 if(pathUrl.matches(regex)) {
                     ClassMethod cm = classMethod.get(pathInController);
+                    req.setAttribute("matchedRoute", pathInController);
                     new ResponseHandler(getServletContext()).handleResponse(cm, req, res);
                     return;
                 }
