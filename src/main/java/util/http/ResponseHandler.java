@@ -10,14 +10,8 @@ import java.util.Map;
 
 import org.apache.commons.beanutils.ConvertUtils;
 
-<<<<<<< Updated upstream
-=======
 import annotations.Param;
 import annotations.PathVariable;
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -109,12 +103,6 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
         
         for (int i = 0; i < parameters.length; i++) {
             Parameter p = parameters[i];
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            String paramName = p.getName();
-=======
-=======
->>>>>>> Stashed changes
             // @pathVarialble
             PathVariable pathVariable = p.getAnnotation(PathVariable.class);
             if(pathVariable != null) {
@@ -137,7 +125,6 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
             } else {
                 paramName = p.getName();
             }
->>>>>>> Stashed changes
             System.out.println("PARAMNAME---- "+paramName);
 
             if(paramsViaVue.containsKey(paramName)) {
