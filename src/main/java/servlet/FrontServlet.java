@@ -2,6 +2,7 @@ package servlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.servlet.RequestDispatcher;
@@ -20,13 +21,13 @@ import util.http.ResponseHandler;
 public class FrontServlet extends HttpServlet {
 
     RequestDispatcher defaultDispatcher;
-    Map<String, ClassMethod> classMethod;
+    Map<String, List<ClassMethod>> listClassMethod;
 
     @Override
     public void init() {
         defaultDispatcher = getServletContext().getNamedDispatcher("default");
 
-        classMethod = (Map<String, ClassMethod>) getServletContext().getAttribute("routes");
+        listClassMethod = (Map<String, List<ClassMethod>>) getServletContext().getAttribute("routes");
     }
 
     @Override
@@ -52,7 +53,7 @@ public class FrontServlet extends HttpServlet {
     private void customServe(HttpServletRequest req, HttpServletResponse res) throws IOException {
         String pathUrl = req.getRequestURI().substring(req.getContextPath().length());
 
-        ClassMethod c = classMethod.get(pathUrl);
+        List<ClassMethod> c = listClassMethod.get(pathUrl);
         if(c != null) {
             new ResponseHandler(getServletContext()).handleResponse(c, req, res);
         } else {
@@ -66,7 +67,7 @@ public class FrontServlet extends HttpServlet {
 
     // Fonction qui verifie s'il existe un accolade dans les url d'une classe
     private void verifyingUrl(String pathUrl, HttpServletRequest req, HttpServletResponse res) throws IOException {
-        for (Map.Entry<String, ClassMethod> entry : classMethod.entrySet()) {
+        for (Map.Entry<String, List<ClassMethod>> entry : listClassMethod.entrySet()) {
             String pathInController = entry.getKey();
             if(pathInController.contains("{")) {
                 // On construit un regex
@@ -79,7 +80,7 @@ public class FrontServlet extends HttpServlet {
                 System.out.println(regex);
 
                 if(pathUrl.matches(regex)) {
-                    ClassMethod cm = classMethod.get(pathInController);
+                    List<ClassMethod> cm = listClassMethod.get(pathInController);
                     req.setAttribute("matchedRoute", pathInController);
                     new ResponseHandler(getServletContext()).handleResponse(cm, req, res);
                     return;
