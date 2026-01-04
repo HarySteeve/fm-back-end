@@ -6,7 +6,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -106,7 +109,7 @@ public class ResponseHandler {
         }
     }
 
-private Object[] getMatchedParams(Method method, HttpServletRequest req) {
+    private Object[] getMatchedParams(Method method, HttpServletRequest req) {
         Parameter[] parameters = method.getParameters();
         Object[] args = new Object[parameters.length];
 
@@ -141,6 +144,30 @@ private Object[] getMatchedParams(Method method, HttpServletRequest req) {
                 }
                 continue;
             }
+            // Map<String, Object[]>
+            Type type = p.getParameterizedType();
+            if (type instanceof ParameterizedType) {
+                ParameterizedType pt = (ParameterizedType) type;
+
+                if (pt.getRawType().equals(Map.class)) {
+                    Type[] typeArgs = pt.getActualTypeArguments();
+
+                    if (typeArgs.length == 2
+                            && typeArgs[0].equals(String.class)
+                            && typeArgs[1].equals(Object[].class)) {
+
+                        Map<String, Object[]> paramMapObject = new HashMap<>();
+
+                        req.getParameterMap().forEach((key, values) -> {
+                            paramMapObject.put(key, values);
+                        });
+
+                        args[i] = paramMapObject;
+                        continue;
+                    }
+                }
+            }
+            
             // @param
             String paramName;
             Param annotation = p.getAnnotation(Param.class);
