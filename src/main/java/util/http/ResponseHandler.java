@@ -2,10 +2,12 @@ package util.http;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.beanutils.ConvertUtils;
@@ -27,9 +29,9 @@ public class ResponseHandler {
     }
 
     // Fabrication jerijereo
-    public void handleResponse(ClassMethod cm, HttpServletRequest req,HttpServletResponse res) throws IOException {
+    public void handleResponse(List<ClassMethod> cm, HttpServletRequest req,HttpServletResponse res) throws IOException {
         Boolean cmExist = cm != null;
-        System.out.println(cmExist);
+        System.out.println("CM-EXISTTTT------ " + cmExist);
 
         if(cmExist) {
             invokeControllerMethod(cm, req, res);
@@ -48,10 +50,32 @@ public class ResponseHandler {
         }
     }
 
-    private void invokeControllerMethod(ClassMethod cm, HttpServletRequest req, HttpServletResponse res) {
+    private void invokeControllerMethod(List<ClassMethod> cms, HttpServletRequest req, HttpServletResponse res) {
         try {
-            Class<?> c = cm.clazz;
-            Method m = cm.method;
+            Method m = null;
+            Class<?> c = null;
+            System.out.println("HTTP METHOD: " + req.getMethod());
+            for(ClassMethod cm : cms) {
+                Method method = cm.getMethod();
+                Annotation[] anns = method.getAnnotations();
+                for(Annotation ann : anns) {
+                    System.out.println("Annotation present: " + ann.annotationType().getSimpleName());
+                }
+
+                if(cm.annotationMatchesHttpMethod(anns, req.getMethod())) {
+                    c = cm.getClazz();
+                    m = method;
+                    break;
+                }
+            }
+
+            if (m == null) {
+                // aucune méthode correspondante pour ce verb -> 405
+                res.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+                responseBody = "Method not allowed";
+                return;
+            }
+            
             m.setAccessible(true);
 
             Object[] args = getMatchedParams(m, req);
