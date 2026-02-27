@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.beanutils.ConvertUtils;
-
 import annotations.Param;
 import annotations.PathVariable;
 import jakarta.servlet.RequestDispatcher;
@@ -137,7 +135,7 @@ public class ResponseHandler {
                 if(pathVariables.containsKey(varName)) {
                     String value = pathVariables.get(varName);
                     Class<?> typeArg = p.getType();
-                    Object convertedValue = ConvertUtils.convert(value, typeArg);
+                    Object convertedValue = TypeConverter.convert(value, typeArg);
                     args[i] = convertedValue;
                 } else {
                     args[i] = null;
@@ -167,6 +165,15 @@ public class ResponseHandler {
                     }
                 }
             }
+
+            if(!isSimpleType(p.getType()) && p.getAnnotation(Param.class) == null) {
+                try {
+                    args[i] = RequestBinder.bind(req, p.getType());
+                } catch (Exception ex) {
+                    throw new RuntimeException("Erreur binding paramètre '" + p.getName() + "': " + ex.getMessage(), ex);
+                }
+                continue;
+            }
             
             // @param
             String paramName;
@@ -182,13 +189,22 @@ public class ResponseHandler {
                 String value = paramsViaVue.get(paramName)[0];
                 Class<?> typeArg = p.getType();
 
-                Object convertedValue = ConvertUtils.convert(value, typeArg);
+                Object convertedValue = TypeConverter.convert(value, typeArg);
                 args[i] = convertedValue;
             } else {
                 args[i] = null;
             }
         }
         return args;
+    }
+
+    private boolean isSimpleType(Class<?> t) {
+        return t.isPrimitive()
+            || t == String.class
+            || Number.class.isAssignableFrom(t)
+            || t == Boolean.class
+            || t == Character.class
+            || t.isEnum();
     }
 
     private Map<String, String> extractPathVariables(String template, String path) {

@@ -1,12 +1,17 @@
+util\http\RequestBinder.class
 servlet\GorgonServletContext.class
+util\http\PropertyPathParser$TokenType.class
 annotations\AnnotationClass.class
 annotations\Param.class
 annotations\PathVariable.class
 util\http\ResponseHandler.class
 annotations\Get.class
+util\http\PropertyPathParser.class
 servlet\FrontServlet.class
 annotations\Post.class
 util\scan\MethodScanner.class
+util\http\PropertyPathParser$Token.class
+util\http\TypeConverter.class
 util\http\ModelAndView.class
 util\scan\ClassScanner.class
 util\http\ClassMethod.class
