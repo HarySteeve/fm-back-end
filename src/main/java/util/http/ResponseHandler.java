@@ -15,6 +15,7 @@ import java.util.Map;
 
 import annotations.Param;
 import annotations.PathVariable;
+import annotations.Rest;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
@@ -52,6 +53,7 @@ public class ResponseHandler {
     }
 
     private void invokeControllerMethod(List<ClassMethod> cms, HttpServletRequest req, HttpServletResponse res) {
+        Method selectedMethod = null;
         try {
             Method m = null;
             Class<?> c = null;
@@ -70,6 +72,8 @@ public class ResponseHandler {
                 }
             }
 
+            selectedMethod = m;
+
             if (m == null) {
                 // aucune méthode correspondante pour ce verb -> 405
                 res.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
@@ -82,28 +86,53 @@ public class ResponseHandler {
             Object[] args = getMatchedParams(m, req);
             Class<?> returnType = m.getReturnType();
             Object objectController = c.getDeclaredConstructor().newInstance();
+
+            Object result = m.invoke(objectController, args);
+
+            if(m.isAnnotationPresent(Rest.class)) {
+                Object payload = RestResponseUtil.unwrapModelAndView(result);
+                RestResponseUtil.writeSuccess(res, payload);
+                responseBody = null;
+                return;
+            }
+
             if(returnType.equals(String.class)) {
                 res.setContentType("text/plain");
-                responseBody = m.invoke(objectController, args).toString();
+                responseBody = (result == null) ? "" : result.toString();
             } else if(returnType.equals(ModelAndView.class)){
-                ModelAndView mv = (ModelAndView)m.invoke(objectController, args);
-                Map<String, Object> data = mv.getData();
+                ModelAndView mv = (ModelAndView) result;
+                Map<String, Object> data = (mv == null) ? null : mv.getData();
                 if(data != null) {
                     for (Map.Entry<String, Object> entry : data.entrySet()) {
                         req.setAttribute(entry.getKey(), entry.getValue());
                     }
                 }
-                String view = mv.getView();
+                String view = (mv == null) ? null : mv.getView();
                 RequestDispatcher requestDispatcher = context.getRequestDispatcher(view);
                 requestDispatcher.forward(req, res);
-            } else {
-                m.invoke(objectController);
             }
         } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalArgumentException | InvocationTargetException | IllegalAccessException ex) {
-            // TODO: handle exception
-            handleError(res, "Error invoking controller method: "+ ex.getMessage());
+            if(selectedMethod != null && selectedMethod.isAnnotationPresent(Rest.class)) {
+                try {
+                    RestResponseUtil.writeError(res, 500, ex.getMessage());
+                    responseBody = null;
+                } catch (IOException io) {
+                    handleError(res, "Error invoking controller method: "+ ex.getMessage());
+                }
+            } else {
+                handleError(res, "Error invoking controller method: "+ ex.getMessage());
+            }
         } catch (ServletException | IOException ex) { // From requestDispatcher.forward()
-            handleError(res, "Error forwarding to view: " + ex.getMessage());
+            if(selectedMethod != null && selectedMethod.isAnnotationPresent(Rest.class)) {
+                try {
+                    RestResponseUtil.writeError(res, 500, ex.getMessage());
+                    responseBody = null;
+                } catch (IOException io) {
+                    handleError(res, "Error forwarding to view: " + ex.getMessage());
+                }
+            } else {
+                handleError(res, "Error forwarding to view: " + ex.getMessage());
+            }
         }
     }
 
